@@ -13,12 +13,15 @@ let currentUser = localStorage.getItem('userName') || '';
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Check if user name is already set
   if (currentUser) {
     document.getElementById('userNameDisplay').textContent = currentUser;
     document.getElementById('userSetupCard').style.display = 'none';
+      document.getElementById('welcomeMessage').style.display = 'none';
+    document.getElementById('menuContainer').style.display = 'block';
     initializeApp();
   } else {
+    document.getElementById('userSetupCard').style.display = 'block';
+    document.getElementById('menuContainer').style.display = 'none';
     document.getElementById('userNameInput').focus();
   }
 });
@@ -27,7 +30,7 @@ function setUserName() {
   const userName = document.getElementById('userNameInput').value.trim();
 
   if (!userName) {
-    alert('Please enter your name');
+    showToast('Please enter your name', "info");
     return;
   }
 
@@ -36,8 +39,30 @@ function setUserName() {
   document.getElementById('userNameDisplay').textContent = userName;
   document.getElementById('userSetupCard').style.display = 'none';
 
+  document.getElementById('menuContainer').style.display = 'block';
+  document.getElementById('welcomeMessage').style.display = 'none';
+
+
   initializeApp();
 }
+function showToast(message, type = 'success') { //success, danger, info, warning
+  const toast = document.createElement('div');
+  toast.className = `toast align-items-center text-bg-${type} border-0 mb-2`;
+  toast.role = 'alert';
+  toast.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">${message}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  `;
+  document.getElementById('toastContainer').appendChild(toast);
+  const bsToast = new bootstrap.Toast(toast);
+  bsToast.show();
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Use showToast() instead of alert/showSuccess
+
 
 function initializeApp() {
   showLoading();
@@ -216,18 +241,18 @@ function decrementQuantity(itemId) {
 
 function addToOrder(itemId) {
   if (!currentUser) {
-    alert('Please enter your name first');
+    showToast('Please enter your name first', "warning");
     return;
   }
 
   if (!currentSession || !currentSession.sessionId) {
-    alert('Session not initialized. Please refresh the page.');
+    showToast('Session not initialized. Please refresh the page.', "danger");
     return;
   }
 
   const item = menuData.find(i => i.id === itemId);
   if (!item) {
-    alert('Item not found');
+    showToast('Item not found', "danger");
     return;
   }
 
@@ -249,10 +274,10 @@ function addToOrder(itemId) {
 
   google.script.run
     .withSuccessHandler(function(result) {
-      hideLoading();
       if (result.success) {
-        showSuccess('Added to order!');
+        showToast('Added to order!', "success");
         quantityInput.value = 1; // Reset quantity
+        hideLoading();
         loadOrders(); // Refresh orders
       } else {
         showError('Failed to add order: ' + result.error);
@@ -385,7 +410,7 @@ function markAsServed(orderId) {
     .withSuccessHandler(function(result) {
       hideLoading();
       if (result.success) {
-        showSuccess('Marked as served!');
+        showToast('Marked as served!', "success");
         loadOrders();
       } else {
         showError('Failed to update: ' + result.error);
@@ -409,7 +434,7 @@ function markAsNotAvailable(orderId) {
     .withSuccessHandler(function(result) {
       hideLoading();
       if (result.success) {
-        showSuccess('Marked as not available');
+        showToast('Marked as not available', "success");
         loadOrders();
       } else {
         showError('Failed to update: ' + result.error);
@@ -433,7 +458,7 @@ function deleteOrder(orderId) {
     .withSuccessHandler(function(result) {
       hideLoading();
       if (result.success) {
-        showSuccess('Order removed');
+        showToast('Order removed', "success");
         loadOrders();
       } else {
         showError('Failed to delete: ' + result.error);
@@ -453,7 +478,7 @@ function deleteOrder(orderId) {
 
 function showBillModal() {
   if (!currentSession || !currentSession.sessionId) {
-    alert('No active session');
+    showToast('No active session', "danger");
     return;
   }
 
@@ -620,11 +645,12 @@ function renderBillSummary(billData) {
 // ============================================
 
 function showLoading() {
-  // Simple loading implementation - you can enhance this
+  document.getElementById('loadingOverlay').style.display = 'flex';
   document.body.style.cursor = 'wait';
 }
 
 function hideLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
   document.body.style.cursor = 'default';
 }
 
@@ -635,7 +661,7 @@ function showSuccess(message) {
 }
 
 function showError(message) {
-  alert('Error: ' + message);
+  showToast('Error: ' + message, "danger");
   console.error('Error:', message);
 }
 
