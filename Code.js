@@ -1,4 +1,3 @@
-
 // ============================================
 // GOOGLE APPS SCRIPT BACKEND
 // Restaurant Group Ordering System
@@ -6,10 +5,10 @@
 
 // Configuration
 const CONFIG = {
-  MENU_SHEET: 'Menu',
-  ORDERS_SHEET: 'Orders',
-  SESSIONS_SHEET: 'Sessions',
-  SPREADSHEET_ID: SpreadsheetApp.getActiveSpreadsheet().getId()
+  MENU_SHEET: "Menu",
+  ORDERS_SHEET: "Orders",
+  SESSIONS_SHEET: "Sessions",
+  SPREADSHEET_ID: SpreadsheetApp.getActiveSpreadsheet().getId(),
 };
 
 // ============================================
@@ -17,11 +16,14 @@ const CONFIG = {
 // ============================================
 
 function doGet(e) {
-  const template = HtmlService.createTemplateFromFile('Index');
-  return template.evaluate()
-    .setTitle('Group Dining Order Manager')
-    .setFaviconUrl('https://www.gstatic.com/images/branding/product/1x/apps_script_48dp.png')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
+  const template = HtmlService.createTemplateFromFile("Index");
+  return template
+    .evaluate()
+    .setTitle("Group Dining Order Manager")
+    .setFaviconUrl(
+      "https://www.gstatic.com/images/branding/product/1x/apps_script_48dp.png"
+    )
+    .addMetaTag("viewport", "width=device-width, initial-scale=1.0");
 }
 
 // Include CSS and JS files
@@ -39,7 +41,7 @@ function getMenuData() {
     const menuSheet = ss.getSheetByName(CONFIG.MENU_SHEET);
 
     if (!menuSheet) {
-      return { success: false, error: 'Menu sheet not found' };
+      return { success: false, error: "Menu sheet not found" };
     }
 
     const data = menuSheet.getDataRange().getValues();
@@ -49,22 +51,23 @@ function getMenuData() {
     // Skip header row
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      if (row[0]) { // If ID exists
+      if (row[0]) {
+        // If ID exists
         menuItems.push({
           id: row[0],
           category: row[1],
           name: row[2],
           price: row[3],
           description: row[4],
-          vegetarian: row[5] === true || row[5] === 'TRUE',
-          available: row[6] === true || row[6] === 'TRUE' || row[6] === ''
+          vegetarian: row[5] === true || row[5] === "TRUE",
+          available: row[6] === true || row[6] === "TRUE" || row[6] === "",
         });
       }
     }
 
     return { success: true, data: menuItems };
   } catch (error) {
-    Logger.log('Error in getMenuData: ' + error.toString());
+    Logger.log("Error in getMenuData: " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
@@ -79,24 +82,24 @@ function createNewSession(sessionName) {
     const sessionsSheet = ss.getSheetByName(CONFIG.SESSIONS_SHEET);
 
     if (!sessionsSheet) {
-      return { success: false, error: 'Sessions sheet not found' };
+      return { success: false, error: "Sessions sheet not found" };
     }
 
-    const sessionId = 'SESSION_' + new Date().getTime();
+    const sessionId = "SESSION_" + new Date().getTime();
     const timestamp = new Date();
 
     sessionsSheet.appendRow([
       sessionId,
-      sessionName || 'Dinner Session',
+      sessionName || "Dinner Session",
       timestamp,
-      'Active',
+      "Active",
       0, // Total amount (will update later)
-      '' // People (comma-separated list)
+      "", // People (comma-separated list)
     ]);
 
     return { success: true, sessionId: sessionId };
   } catch (error) {
-    Logger.log('Error in createNewSession: ' + error.toString());
+    Logger.log("Error in createNewSession: " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
@@ -107,14 +110,14 @@ function getActiveSession() {
     const sessionsSheet = ss.getSheetByName(CONFIG.SESSIONS_SHEET);
 
     if (!sessionsSheet) {
-      return { success: false, error: 'Sessions sheet not found' };
+      return { success: false, error: "Sessions sheet not found" };
     }
 
     const data = sessionsSheet.getDataRange().getValues();
 
     // Find the most recent active session
     for (let i = data.length - 1; i > 0; i--) {
-      if (data[i][3] === 'Active') {
+      if (data[i][3] === "Active") {
         return {
           success: true,
           session: {
@@ -123,16 +126,16 @@ function getActiveSession() {
             startTime: data[i][2],
             status: data[i][3],
             totalAmount: data[i][4],
-            people: data[i][5]
-          }
+            people: data[i][5],
+          },
         };
       }
     }
 
     // No active session found, create new one
-    return createNewSession('New Dinner Session');
+    return createNewSession("New Dinner Session");
   } catch (error) {
-    Logger.log('Error in getActiveSession: ' + error.toString());
+    Logger.log("Error in getActiveSession: " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
@@ -147,10 +150,11 @@ function addOrder(orderData) {
     const ordersSheet = ss.getSheetByName(CONFIG.ORDERS_SHEET);
 
     if (!ordersSheet) {
-      return { success: false, error: 'Orders sheet not found' };
+      return { success: false, error: "Orders sheet not found" };
     }
 
-    const orderId = 'ORD_' + new Date().getTime() + '_' + Math.floor(Math.random() * 1000);
+    const orderId =
+      "ORD_" + new Date().getTime() + "_" + Math.floor(Math.random() * 1000);
     const timestamp = new Date();
 
     ordersSheet.appendRow([
@@ -163,19 +167,19 @@ function addOrder(orderData) {
       orderData.quantity,
       orderData.pricePerItem,
       orderData.totalPrice,
-      'Ordered', // Status
+      "Ordered", // Status
       timestamp, // Order time
-      '', // Served time
-      '' // Notes
+      "", // Served time
+      "", // Notes
     ]);
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       orderId: orderId,
-      message: 'Order added successfully'
+      message: "Order added successfully",
     };
   } catch (error) {
-    Logger.log('Error in addOrder: ' + error.toString());
+    Logger.log("Error in addOrder: " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
@@ -186,7 +190,7 @@ function getAllOrders(sessionId) {
     const ordersSheet = ss.getSheetByName(CONFIG.ORDERS_SHEET);
 
     if (!ordersSheet) {
-      return { success: false, error: 'Orders sheet not found' };
+      return { success: false, error: "Orders sheet not found" };
     }
 
     const data = ordersSheet.getDataRange().getValues();
@@ -195,7 +199,8 @@ function getAllOrders(sessionId) {
     // Skip header row
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      if (row[1] === sessionId) { // Match session ID
+      if (row[1] === sessionId) {
+        // Match session ID
         orders.push({
           orderId: row[0],
           sessionId: row[1],
@@ -210,14 +215,14 @@ function getAllOrders(sessionId) {
           orderTime: row[10],
           servedTime: row[11],
           notes: row[12],
-          rowIndex: i + 1 // For updates
+          rowIndex: i + 1, // For updates
         });
       }
     }
 
     return { success: true, data: orders };
   } catch (error) {
-    Logger.log('Error in getAllOrders: ' + error.toString());
+    Logger.log("Error in getAllOrders: " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
@@ -228,7 +233,7 @@ function updateOrderStatus(orderId, newStatus, notes) {
     const ordersSheet = ss.getSheetByName(CONFIG.ORDERS_SHEET);
 
     if (!ordersSheet) {
-      return { success: false, error: 'Orders sheet not found' };
+      return { success: false, error: "Orders sheet not found" };
     }
 
     const data = ordersSheet.getDataRange().getValues();
@@ -242,7 +247,7 @@ function updateOrderStatus(orderId, newStatus, notes) {
         ordersSheet.getRange(rowIndex, 10).setValue(newStatus);
 
         // If served, update served time
-        if (newStatus === 'Served') {
+        if (newStatus === "Served") {
           ordersSheet.getRange(rowIndex, 12).setValue(new Date());
         }
 
@@ -251,16 +256,16 @@ function updateOrderStatus(orderId, newStatus, notes) {
           ordersSheet.getRange(rowIndex, 13).setValue(notes);
         }
 
-        return { 
-          success: true, 
-          message: 'Order status updated to ' + newStatus 
+        return {
+          success: true,
+          message: "Order status updated to " + newStatus,
         };
       }
     }
 
-    return { success: false, error: 'Order not found' };
+    return { success: false, error: "Order not found" };
   } catch (error) {
-    Logger.log('Error in updateOrderStatus: ' + error.toString());
+    Logger.log("Error in updateOrderStatus: " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
@@ -271,7 +276,7 @@ function deleteOrder(orderId) {
     const ordersSheet = ss.getSheetByName(CONFIG.ORDERS_SHEET);
 
     if (!ordersSheet) {
-      return { success: false, error: 'Orders sheet not found' };
+      return { success: false, error: "Orders sheet not found" };
     }
 
     const data = ordersSheet.getDataRange().getValues();
@@ -280,16 +285,16 @@ function deleteOrder(orderId) {
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === orderId) {
         ordersSheet.deleteRow(i + 1);
-        return { 
-          success: true, 
-          message: 'Order deleted successfully' 
+        return {
+          success: true,
+          message: "Order deleted successfully",
         };
       }
     }
 
-    return { success: false, error: 'Order not found' };
+    return { success: false, error: "Order not found" };
   } catch (error) {
-    Logger.log('Error in deleteOrder: ' + error.toString());
+    Logger.log("Error in deleteOrder: " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
@@ -318,11 +323,11 @@ function calculateBill(sessionId) {
       byStatus: {
         Ordered: 0,
         Served: 0,
-        'Not Available': 0
-      }
+        "Not Available": 0,
+      },
     };
 
-    orders.forEach(order => {
+    orders.forEach((order) => {
       billSummary.totalItems += order.quantity;
       billSummary.totalAmount += order.totalPrice;
 
@@ -339,24 +344,25 @@ function calculateBill(sessionId) {
       billSummary.byCategory[order.category] += order.totalPrice;
 
       // By status
-      if (order.status === 'Served') {
+      if (order.status === "Served") {
         billSummary.servedAmount += order.totalPrice;
-      } else if (order.status === 'Ordered') {
+      } else if (order.status === "Ordered") {
         billSummary.pendingAmount += order.totalPrice;
-      } else if (order.status === 'Not Available') {
+      } else if (order.status === "Not Available") {
         billSummary.cancelledAmount += order.totalPrice;
       }
 
-      billSummary.byStatus[order.status] = (billSummary.byStatus[order.status] || 0) + order.totalPrice;
+      billSummary.byStatus[order.status] =
+        (billSummary.byStatus[order.status] || 0) + order.totalPrice;
     });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       summary: billSummary,
-      orders: orders
+      orders: orders,
     };
   } catch (error) {
-    Logger.log('Error in calculateBill: ' + error.toString());
+    Logger.log("Error in calculateBill: " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
@@ -371,28 +377,30 @@ function closeSession(sessionId) {
     const sessionsSheet = ss.getSheetByName(CONFIG.SESSIONS_SHEET);
 
     if (!sessionsSheet) {
-      return { success: false, error: 'Sessions sheet not found' };
+      return { success: false, error: "Sessions sheet not found" };
     }
 
     const data = sessionsSheet.getDataRange().getValues();
 
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === sessionId) {
-        sessionsSheet.getRange(i + 1, 4).setValue('Closed');
+        sessionsSheet.getRange(i + 1, 4).setValue("Closed");
 
         // Calculate and update total amount
         const billResult = calculateBill(sessionId);
         if (billResult.success) {
-          sessionsSheet.getRange(i + 1, 5).setValue(billResult.summary.servedAmount);
+          sessionsSheet
+            .getRange(i + 1, 5)
+            .setValue(billResult.summary.servedAmount);
         }
 
-        return { success: true, message: 'Session closed successfully' };
+        return { success: true, message: "Session closed successfully" };
       }
     }
 
-    return { success: false, error: 'Session not found' };
+    return { success: false, error: "Session not found" };
   } catch (error) {
-    Logger.log('Error in closeSession: ' + error.toString());
+    Logger.log("Error in closeSession: " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
